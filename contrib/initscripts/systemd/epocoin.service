@@ -1,0 +1,11 @@
+[Unit]
+Description=epocoin daemon serivce
+After=network.target
+
+[Service]
+Type=simple
+User=epocoin
+ExecStart=/opt/epocoin/epocoind
+
+[Install]
+WantedBy=multi-user.target

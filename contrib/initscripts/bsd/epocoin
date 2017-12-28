@@ -1,0 +1,68 @@
+#!/bin/sh
+
+# PROVIDE: epocoin
+# REQUIRE: LOGIN
+# KEYWORD: shutdown
+
+#
+# Add the following lines to /etc/rc.conf.local or /etc/rc.conf
+# to enable this service:
+#
+# epocoin_enable (bool): Set to NO by default. Set this variable to YES if you want to enable epocoin service.
+# epocoin_config (path): Set to /usr/local/etc/epocoin.conf by default.
+# epocoin_user:  The user account epocoin daemon runs as. It uses 'root' user by default.
+# epocoin_group: The group account epocoin daemon runs as. It uses 'wheel' group by default.
+# epocoin_datadir (str): Default to "/var/db/epocoin". Base data directory.
+
+. /etc/rc.subr
+
+name=epocoin
+rcvar=epocoin_enable
+
+: ${epocoin_enable:=NO}
+: ${epocoin_config=/usr/local/etc/epocoin.conf}
+: ${epocoin_datadir=/var/db/epocoin}
+: ${epocoin_user="root"}
+: ${epocoin_group="wheel"}
+
+required_files=${epocoin_config}
+command=/usr/local/bin/epocoind
+epocoin_chdir=${epocoin_datadir}
+pidfile="${epocoin_datadir}/epocoind.pid"
+stop_cmd=epocoin_stop
+command_args="-conf=${epocoin_config} -datadir=${epocoin_datadir} -daemon -pid=${pidfile}"
+start_precmd="${name}_prestart"
+
+epocoin_create_datadir()
+{
+	echo "Creating data directory"
+	eval mkdir -p ${epocoin_datadir}
+	[ $? -eq 0 ] && chown -R ${epocoin_user}:${epocoin_group} ${epocoin_datadir}
+}
+
+epocoin_prestart()
+{
+	if [ ! -d "${epocoin_datadir}/." ]; then
+		epocoin_create_datadir || return 1
+	fi
+}
+
+epocoin_requirepidfile()
+{
+	if [ ! "0`check_pidfile ${pidfile} ${command}`" -gt 1 ]; then
+		echo "${name} not running? (check $pidfile)."
+		exit 1
+	fi
+}
+
+epocoin_stop()
+{
+    epocoin_requirepidfile
+
+	echo "Stopping ${name}."
+	eval ${command} -conf=${epocoin_config} -datadir=${epocoin_datadir} stop
+	wait_for_pids ${rc_pid}
+}
+
+load_rc_config $name
+run_rc_command "$1"

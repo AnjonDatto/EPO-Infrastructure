@@ -1,0 +1,26 @@
+#!/usr/bin/make -f
+# -*- mode: makefile; coding: utf-8 -*-
+
+DEB_INSTALL_EXAMPLES_epocoind += debian/examples/*
+DEB_INSTALL_MANPAGES_epocoind += debian/manpages/*
+
+%:
+	dh --with bash-completion $@
+
+override_dh_auto_build:
+	cd src; $(MAKE) -f makefile.unix epocoind USE_ASM=1 USE_LEVELDB=1
+	$(MAKE)
+
+override_dh_auto_clean:
+	if [ -f Makefile ]; then $(MAKE) clean; else rm -rf build/; rm -f epocoin-qt; fi
+	cd src; $(MAKE) -f makefile.unix clean
+
+override_dh_auto_configure:
+	qmake epocoin-qt.pro USE_ASM=1 USE_LEVELDB=1
+
+# Ensure wrapper is set executable
+binary-post-install/epocoind:
+	chmod +x $(cdbs_curdestdir)usr/bin/epocoind
+binary-post-install/epocoin-qt:
+	chmod +x $(cdbs_curdestdir)usr/bin/epocoin-qt
+u

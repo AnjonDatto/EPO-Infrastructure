@@ -1,0 +1,57 @@
+<template name="status-open">
+    <div>
+      <h1 class="domain-name"><strong>{{name}}</strong> is available</h1> 
+        {{>component_explainerBid}}
+
+        
+        
+      </div>
+
+      {{#unless hasBids}}
+      {{#if hasNode}}
+  
+          {{>components_newBid}}
+
+          <p>
+          Or..
+          </p>
+
+          <button type="submit" class="open-auction" disabled={{opening}}> 
+            {{#if opening}}
+              Opening...
+            {{else}}
+              Open without bidding
+            {{/if}}
+          </button>
+          
+
+        {{else}}
+        {{> components_noNode}}
+        {{/if}}
+      {{else}}
+      <div class="unused-bids">
+          <h3>You have bid but the auction is not open</h3>
+
+          You open bids on an auction that isn't open. Either an error occurred opening the auction, or the auction ended without any bids. In either case, <strong>you must open the auction again to validate your bid</strong>.
+
+          {{#each bid in bids}}
+          {{> components_bid bid=bid status='open' }}
+          {{/each}}
+
+          <br>
+          <button type="submit" class="open-auction dapp-block-button" disabled={{opening}}> 
+            {{#if opening}}
+              Opening...
+            {{else}}
+              Open Auction
+            {{/if}}
+          </button>
+      </div>
+      <div style="visibility: hidden;">{{>components_newBid}}</div>      
+      {{/unless}}
+
+</template>
+
+<template name='aside-open'>
+      {{>components_watch name=name}}
+</template>

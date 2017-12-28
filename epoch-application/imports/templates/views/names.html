@@ -1,0 +1,60 @@
+<template name="view_names">
+    {{#if watchesNames}}
+        {{#if sortedByDate}}
+        <ul class="names">
+            <li><h3>Owned</h3></li>
+            {{#each name in mode 'owned'}}
+              <li>
+                  {{ > components_nameLink fullname=(name.fullname) mode=(name.mode) }}
+              </li>
+            {{/each}}
+
+            <li><h3>Bids being revealed</h3></li>
+            {{#each name in mode 'reveal'}}
+              <li>
+                  {{ > components_nameLink fullname=(name.fullname) mode=(name.mode) }}
+              </li>
+            {{/each}}
+
+            <li><h3>Waiting for bids</h3></li>
+            {{#each name in mode 'auction'}}
+              <li>
+                  {{ > components_nameLink fullname=(name.fullname) mode=(name.mode) }}
+              </li>
+            {{/each}}
+            {{#each name in mode 'open'}}
+              <li>
+                  {{ > components_nameLink fullname=(name.fullname) mode=(name.mode) }}
+              </li>
+            {{/each}}
+
+            
+        </ul>
+        <a href="" class="toggle-sort">Sort by name</a>
+        {{else}} 
+        <ul class="names">
+            {{#each name in names}}
+              <li>
+                  {{ > components_nameLink fullname=(name.fullname) mode=(name.mode) }}
+              </li>
+            {{/each}}
+        </ul>
+        <a href="" class="toggle-sort">Sort by mode</a>        
+        {{/if}}
+        
+        <br>
+        <br>
+
+    {{/if}}
+
+    <h3>More Options</h3>
+    <ul>
+        {{#if hasBids}}
+        <li><a href="" class="export-bids">Export Bids </a></li>
+        {{/if}}
+        <li><a href="" class="import-bids">Import Bids</a></li>
+    </ul>
+
+
+</template>
+

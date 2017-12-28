@@ -1,0 +1,207 @@
+<template name="components_nameStatus">
+  {{#if searched}}
+    <div class="main-content col-md-8 {{#if TemplateVar.get 'loading'}}loading{{/if}}">
+      {{#if (TemplateVar.get 'error')}}
+        <h1>Error getting entry</h1>
+        <p>{{TemplateVar.get 'error'}}</p>
+      {{else}}
+        {{> Template.dynamic template=(TemplateVar.get 'status') data=(TemplateVar.get 'nameInfo')}}
+      {{/if}}
+    </div>
+    <aside class="col-md-4">
+        {{> Template.dynamic template=(TemplateVar.get 'aside') data=(TemplateVar.get 'nameInfo')}}
+        {{>view_names}}
+    </aside>    
+  {{else}}
+    <div class="col-md-8 main-content">
+
+        <h1> Check availability of an epoereum Name</h1> 
+
+        {{#if showStats}}
+        <h3> Stats on recent auctions </h3>
+        <ul class="big-numerals">
+            <li>
+                <span class="big-numeral">{{percentageDisputed}}</span> <span class="unit">percent</span> <br> names registered for minimum amount
+            </li>
+            <li>
+                <span class="big-numeral">{{medianValue}}</span> <span class="unit">epoer</span> <br> median price paid per disputed name
+            </li>
+        </ul>
+        {{/if}}
+
+        {{#unless isMainNetwork}}
+          <p><strong>You are NOT on the main Network, but on the {{TemplateVar.get 'network'}} network. Names bought here are not valid on the main net.</strong></p>
+        {{/unless}}
+        
+        {{> component_explainerBody}}
+
+
+        {{#unless hasNode}}
+        {{> components_noNode}}
+        {{/unless}}  
+
+        {{#if hasAuctions}}
+        <br>
+        <h3> Knowns Auctions Started recently </h3>
+
+        Auctions are semi private: they are only seen by those who know the name. Some popular domains are therefore identifiable, but secret names are kept private until the owner decides to become public.
+
+        <ul class="names">
+          {{#each auction in publicAuctions}}
+              <li>
+                  <a href='#{{auction.name}}' class='{{#if auction.watched}}watched{{/if}} {{recent auction.registrationDate}}'>
+                    {{auction.fullname}}
+                  </a> 
+              </li>
+            {{/each}}
+        </ul>
+
+          {{#if showExpiring}}
+          <br>
+          <h3> Last chance to bid! </h3>
+
+
+          <ul class="names">
+            {{#each auction in publicAuctionsAboutToExpire}}
+                <li>
+                    <a href='#{{auction.name}}' class='{{#if auction.watched}}watched{{/if}}'>
+                      {{auction.fullname}}
+                    </a>
+                </li>
+              {{/each}}
+          </ul>
+          {{/if}}
+        {{/if}}
+
+        <br>
+        {{#if namesRegistered}}
+        <h3> Knowns names recently registered </h3>
+
+        Before a name is granted, all names go to a week long wait to see if anyone else wants the name. If no other candidate appears, then the name is granted by locking 0.01 epoer.
+        <ul class="names">
+          {{#each auction in knownNamesRegistered}}
+              <li>
+                  <a href='#{{auction.name}}' class='{{#if canBeInvalidated auction.name }}can-invalidate{{/if}} {{#if auction.watched}}watched{{/if}} {{recent auction.registrationDate}}'>
+                    {{auction.fullname}}
+                  </a>  
+                    {{#if canBeInvalidated auction.name }}
+                    <icon class="icon-alert">!</icon> 
+                    {{/if}}
+              </li>
+            {{/each}}
+        </ul>
+
+        {{/if}}
+
+    </div>
+    <aside class="col-md-4">
+        {{>view_names}}
+    </aside> 
+  {{/if}}
+</template>
+
+<template name="status-forbidden">
+    <div>
+        <h1>Name is too short</h1>
+        <p>
+            Names are <strong>temporarily</strong> limited to 7 characters or more.  This limit will be reduced at <a href="http://docs.ens.domains/en/latest/faq.html#how-was-the-minimum-character-length-of-7-chosen">some point in the future</a>.
+        </p>
+    </div>
+</template>
+
+<template name="status-forbidden-can-invalidate">
+    <div>
+        <h1>Name is too short</h1>
+        <p>
+            Names are <strong>temporarily</strong> limited to 7 characters or more.  This limit will be reduced at <a href="http://docs.ens.domains/en/latest/faq.html#how-was-the-minimum-character-length-of-7-chosen">some point in the future</a>.
+        </p>
+        <p>
+            <strong>But wait!</strong> Someone has accidentally registered this name. Invalidate it and you'll get 50% of their refund.
+        </p>
+
+        {{#if hasNode}}
+          {{#unless TemplateVar.get 'invalidating'}}
+            <button class="dapp-block-button invalidate"> Invalidate </button>
+            {{else}}
+            <button class="dapp-block-button invalidate" disabled> Invalidating... </button>
+            {{/unless}}
+        {{else}}
+        {{> components_noNode}}
+        {{/if}}
+    </div>
+</template>
+
+<template name="aside-forbidden-can-invalidate">
+   <h3>about this name</h3>
+
+    <ul>
+        <li>
+            <span class="big-numeral">{{value}}</span> <span class="unit">epoer</span> locked in this name
+        </li>
+        <li>
+            <span class="big-numeral">{{invalidatorFee}}</span> <span class="unit">epoer</span> will be paid to the first to report this invalid name
+        </li>
+    </ul>
+</template>
+
+<template name="status-not-yet-available">
+    <div>
+        <h1><strong>{{name}}</strong> is not yet available</h1>
+        <p>
+          Names are being released on a distributed schedule. Registration for this name can be requested by anyone after <strong>{{availableDate}}</strong>. 
+        </p>
+        <p>
+          Once a name is requested, a period of 72 hours begins in which anyone can put a sealed bid for it and send the necessary funds (minimum of 0.01 epoer). This period is followed by a 48 hour one (the "Reveal Period") in which <strong>bids must be revealed. Any bid that is not revealed during Reveal Period results in the loss of its related funds</strong>. Revealing your bid requires information stored in your browser, or backed up using the 'Export Bids' option. The highest bidder after all bids are revealed during this Reveal Period becomes the registrant of the name, and the epoer they sent to the contract will be refunded immediately, <strong>minus the value required to outbid the second highest bidder.</strong> The remaining funds are kept locked in a contract for at least a year, after which they can be withdrawn by the registrant upon releasing rights of use of the name. Names with registrants are controlled only by their registrants, who can transfer or release the name until it needs to be renewed.
+        </p>
+
+        <button type="submit" class="dapp-block-button" disabled="true"> Cannot open now </button>
+
+    </div>
+</template>
+
+<template name="aside-not-yet-available">
+    {{>components_watch name=name}}
+
+   <h3>Can be requested in</h3>
+
+    <h1> {{availableCountdown}} </h1>
+</template>
+
+<template name="status-reveal">
+    <div>
+        <h1> <strong>{{name}}</strong> waiting for bids to be revealed </h1>
+        <p>
+          After an auction ends its 72h period of bidding, all bidders have 48h to reveal their bids or forfeit their whole deposit. During this period, no new bids can be made. If no bids are revealed, the name can be requested again after this period ends.
+        </p>
+        {{#if hasBids}}
+          <h3>Your bids</h3>
+
+          {{#each bid in bids}}
+          {{> components_bid bid=bid status='reveal' }}
+          {{/each}}
+        {{else}}
+          <p> You don't have any bids for this name. If you have previously bid, then <a href="" class="import-bids">Import your bids backup</a> to see and reveal them. </p>
+        {{/if}}
+        
+        {{#unless hasNode}}
+        {{> components_noNode}}
+        {{/unless}}
+    </div>
+</template>
+
+<template name="aside-reveal">
+    {{>components_watch name=name}}
+
+    <h3> Time remaining until auction ends</h3>
+    <h1>{{timeRemaining}}</h1>
+    <p> {{registrationDate}} </p>
+    <br>
+    <h3>Current highest bidder</h3>
+    <span class="big-numeral">{{highestBid}}</span> <span class="unit">epoer</span>
+    <br>
+    <h3>Current second-highest bidder</h3>
+    <span class="big-numeral">{{secondHighestBid}}</span> <span class="unit">epoer</span>
+
+</template>
+
+{
